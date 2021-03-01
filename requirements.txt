@@ -1,0 +1,14 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
+
+click==7.1.2
+Flask==1.1.2
+future==0.18.2
+itsdangerous==1.1.0
+Jinja2==2.11.3
+MarkupSafe==1.1.1
+numpy==1.19.5
+opencv-python==4.5.1.48
+Pillow==8.1.0
+torch==1.5.1+cu101
+torchvision==0.6.1+cu101
+Werkzeug==1.0.1
