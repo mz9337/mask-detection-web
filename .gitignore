@@ -1,0 +1,6 @@
+venv/
+node_modules/
+__pycache__/
+app/prediction/weights/
+app/prediction/*.pt
+app/static/bin/
