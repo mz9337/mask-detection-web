@@ -4,7 +4,9 @@ import m from 'mithril'
 let appstate = {
     loading_webcam: true,
     detecting_faces: false,
-    image_src: null
+    image_src: null,
+    fps: 0,
+    frames_count: 0
 };
 
 class Loader {
@@ -37,6 +39,7 @@ class WebCam {
     view(vnode) {
 
         return [
+            // m('video.video-container__element', {autoplay: 'true', id: 'videoElement', style: "display: " + (appstate.loading_webcam ? "none" : "block")})  
             m('video.video-container__element', {autoplay: 'true', id: 'videoElement', style: "display: " + (appstate.loading_webcam ? "none" : "block")})  
         ];
     }
@@ -53,8 +56,12 @@ class Home {
         let width = video.offsetWidth;
         let height = video.offsetHeight;
 
+        if (width == 0 || height == 0)
+            return;
+
         canvas.width = width;
         canvas.height = height;
+
 
         let context = canvas.getContext('2d');
         context.drawImage(video, 0, 0, width, height);
@@ -74,7 +81,6 @@ class Home {
             // console.log(d);
             context.lineWidth = 2;
             context.font = "12px Arial";
-
 
             d.forEach(face => {
                 let conf = Math.round((face.conf*1) * 10000) / 100;
@@ -105,10 +111,16 @@ class Home {
 
             });
 
+            context.font = "24px Arial";
+            context.fillStyle = "#FF0000";
+            context.fillText(appstate.fps + " FPS", 30, 40);
+
             let data = canvas.toDataURL('image/png');
             appstate.image_src = data;
 
             appstate.detecting_faces = false;
+
+            appstate.frames_count += 1;
 
             m.redraw();
          })
@@ -119,42 +131,55 @@ class Home {
         })
     }
 
+    update_FPS() {
+        appstate.fps = appstate.frames_count;
+        appstate.frames_count = 0;
+    }
+
     oncreate() {
         setInterval(e => {
             if (!appstate.loading_webcam && !appstate.detecting_faces)
                 this.take_picture();
         }, 50);
+
+        setInterval(e => {
+            this.update_FPS();
+        }, 1000);
     }
 
     view() {
         return [
             m('.main-container', [
                 m('.detection-container', [
-                    m('.left-side', [
-                        m('.video-container.shadow-lg.bg-white.rounded-lg', [
-                            m(WebCam),
+                    // m('.left-side', [
+                    //     m('.video-container.shadow-lg.bg-white.rounded-lg', [
+                    //         m(WebCam),
 
-                            appstate.loading_webcam &&
-                            m('.flex', [
-                                m(Loader),
-                                m('p.text-blue-500.ml-3.font-bold.text-xl', 'Loading camera...')
-                            ]),
+                    //         appstate.loading_webcam &&
+                    //         m('.flex', [
+                    //             m(Loader),
+                    //             m('p.text-blue-500.ml-3.font-bold.text-xl', 'Loading camera...')
+                    //         ]),
 
-                            !appstate.loading_webcam &&
-                            m('button.predict-btn.focus:outline-none.text-blue-600.text-sm.py-2.5.px-5.rounded-md.border.border-blue-600.hover:bg-blue-50.font-semibold.shadow-lg', {
-                                onclick: e => this.take_picture()
-                            }, 'Detect faces'),
-                            // m('div', 'Loading camera...')
-                        ]),
+                    //         !appstate.loading_webcam &&
+                    //         m('button.predict-btn.focus:outline-none.text-blue-600.text-sm.py-2.5.px-5.rounded-md.border.border-blue-600.hover:bg-blue-50.font-semibold.shadow-lg', {
+                    //             onclick: e => this.take_picture()
+                    //         }, 'Detect faces'),
+                    //         // m('div', 'Loading camera...')
+                    //     ]),
 
-                    ]),
+                    // ]),
 
                     m('.right-side', [
                         // !appstate.loading_webcam &&
                         m('.image-container.shadow-lg.bg-white.rounded-lg', [
                             // m('img', {src: appstate.image_src != null ? appstate.image_src : })
                             (appstate.image_src != null) &&
-                            m('div', m('img', { src: appstate.image_src })),
+                            m('div.image-container__element', m('img', { src: appstate.image_src })),
+                            
+                            m('.video-container.shadow-lg.bg-white.rounded-lg', [
+                                m(WebCam),
+                            ]),
                             
                             // appstate.detecting_faces &&
                             // m('.flex', [
@@ -162,8 +187,14 @@ class Home {
                             //     m('p.text-blue-500.ml-3.font-bold.text-xl', 'Detecting faces...')
                             // ]),
 
-                            (!appstate.detecting_faces && appstate.image_src == null) &&
-                            m('p.text-blue-500.font-bold.text-xl', 'Image with detected faces will be shown here')
+                            // (!appstate.detecting_faces && appstate.image_src == null) &&
+                            // m('p.text-blue-500.font-bold.text-xl', 'Image with detected faces will be shown here'),
+
+                            (appstate.loading_webcam || appstate.image_src == null) &&
+                            m('.flex', [
+                                m(Loader),
+                                m('p.text-blue-500.ml-3.font-bold.text-xl', 'Loading camera...')
+                            ]),
                         ])
                     ])
                 ])
